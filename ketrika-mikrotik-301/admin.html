@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KETRIKA MK301 - Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: var(--dark); }
+        .admin-container {
+            max-width: 1400px; margin: 0 auto; padding: 20px;
+        }
+        .admin-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 30px;
+            background: var(--dark-2);
+            border: 1px solid var(--dark-3);
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+        .admin-header h1 {
+            font-size: 24px; color: white;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .admin-header h1 i { color: var(--primary); }
+        .admin-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; margin-bottom: 30px;
+        }
+        .admin-stat {
+            background: var(--dark-2);
+            border: 1px solid var(--dark-3);
+            border-radius: var(--radius);
+            padding: 25px;
+        }
+        .admin-stat h3 { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; }
+        .admin-stat .value { font-size: 32px; font-weight: 900; color: var(--primary); font-family: var(--font-mono); }
+        .admin-tabs {
+            display: flex; gap: 10px; margin-bottom: 20px;
+        }
+        .admin-tab {
+            padding: 12px 24px;
+            background: var(--dark-2);
+            border: 1px solid var(--dark-3);
+            border-radius: 10px;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-family: var(--font);
+            font-size: 14px; font-weight: 600;
+            transition: var(--transition);
+        }
+        .admin-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .admin-tab.active {
+            background: rgba(0,212,170,0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .admin-table-wrap {
+            background: var(--dark-2);
+            border: 1px solid var(--dark-3);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .admin-table th {
+            background: var(--dark-3);
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+        .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--dark-3);
+            vertical-align: middle;
+        }
+        .admin-table tr:hover td { background: rgba(0,212,170,0.03); }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .badge-pending { background: rgba(253,203,110,0.2); color: var(--warning); }
+        .badge-active { background: rgba(0,184,148,0.2); color: var(--success); }
+        .badge-used { background: rgba(136,136,170,0.2); color: var(--text-dim); }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: var(--blue); color: var(--dark); }
+        .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
+        }
+        .login-card {
+            background: var(--dark-2);
+            border: 1px solid var(--dark-3);
+            border-radius: var(--radius-lg);
+            padding: 50px;
+            width: 100%; max-width: 400px;
+            text-align: center;
+        }
+        .login-card h2 {
+            font-size: 24px; color: white; margin-bottom: 10px;
+        }
+        .login-card p { color: var(--text-dim); margin-bottom: 30px; }
+        .login-icon {
+            font-size: 50px; color: var(--primary); margin-bottom: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-dim);
+        }
+        .empty-state i { font-size: 60px; margin-bottom: 20px; opacity: 0.3; }
+        .key-display {
+            font-family: var(--font-mono);
+            background: var(--dark);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: var(--primary);
+        }
+        .responsive-table { overflow-x: auto; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+        <div class="login-icon"><i class="fas fa-shield-alt"></i></div>
+        <h2>Admin Panel</h2>
+        <p>KETRIKA MIKROTIK 301</p>
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="password" id="adminPassword" class="form-control form-control-lg"
+                       placeholder="Mot de passe admin" autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                <i class="fas fa-sign-in-alt"></i> Connexion
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-container" id="adminPanel" style="display:none;">
+    <div class="admin-header">
+        <h1><i class="fas fa-cogs"></i> KETRIKA MK301 - Administration</h1>
+        <div>
+            <a href="index.html" class="btn btn-outline btn-sm" target="_blank">
+                <i class="fas fa-external-link-alt"></i> Voir le Site
+            </a>
+            <button class="btn btn-danger btn-sm" onclick="adminLogout()" style="margin-left:10px;">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+        <div class="admin-stat">
+            <h3>Commandes Totales</h3>
+            <div class="value" id="statOrders">0</div>
+        </div>
+        <div class="admin-stat">
+            <h3>En Attente</h3>
+            <div class="value" id="statPending" style="color: var(--warning);">0</div>
+        </div>
+        <div class="admin-stat">
+            <h3>Clés Actives</h3>
+            <div class="value" id="statActive" style="color: var(--success);">0</div>
+        </div>
+        <div class="admin-stat">
+            <h3>Clés Utilisées</h3>
+            <div class="value" id="statUsed" style="color: var(--text-dim);">0</div>
+        </div>
+        <div class="admin-stat">
+            <h3>Revenus</h3>
+            <div class="value" id="statRevenue">0 Ar</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('orders')">
+            <i class="fas fa-shopping-cart"></i> Commandes
+        </button>
+        <button class="admin-tab" onclick="switchTab('keys')">
+            <i class="fas fa-key"></i> Clés de Licence
+        </button>
+    </div>
+
+    <!-- Orders Tab -->
+    <div class="tab-content active" id="tab-orders">
+        <div class="admin-table-wrap">
+            <div class="responsive-table">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Plan</th>
+                            <th>MikroTik</th>
+                            <th>Client</th>
+                            <th>Ref. Paiement</th>
+                            <th>Status</th>
+                            <th>Clé</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keys Tab -->
+    <div class="tab-content" id="tab-keys">
+        <div class="admin-table-wrap">
+            <div class="responsive-table">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Clé</th>
+                            <th>Commande</th>
+                            <th>Plan</th>
+                            <th>Date Création</th>
+                            <th>Status</th>
+                            <th>Date Utilisation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
